@@ -47,8 +47,10 @@ then `./build/demo`.
 4. Run `./wasm/build-wasm.sh` (it uses your `CMakeLists.txt`); the bundle
    ends up in `build/web`.
 
-More options: `UTW_ROWS`, `UTW_PERSIST_DIR`, `UTW_WEB_DIR`, `UTW_WEB_FILES`;
-script variables `WEB_DIR`, `OBJ_DIR`, `ALLOW_UNTESTED_EMSDK=1`.
+More options: `UTW_ROWS`, `UTW_PERSIST_DIR`, `UTW_WEB_DIR`, `UTW_WEB_FILES`,
+`UTW_PTY_JS`, `UTW_PAGE`, `UTW_PRE_JS_EXTRA`; script variables `WEB_DIR`,
+`OBJ_DIR`, `ALLOW_UNTESTED_EMSDK=1`. The page can pass a `displayName`
+callback to `createStorageManager()` to map stored file names for display.
 
 ## Limits
 

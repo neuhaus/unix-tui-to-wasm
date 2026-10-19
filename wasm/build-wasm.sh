@@ -1,15 +1,19 @@
 #!/bin/sh
 # wasm/build-wasm.sh - build and stage the servable browser bundle.
 #
-# Needs: emsdk (emcc + emcmake on PATH) in the pinned version from
-# wasm/emsdk-version, cmake, a host C compiler (cc), curl and network
-# access for the pinned browser assets below.
+# Builds the CMake project at ROOT (default: this script's parent
+# directory) and stages a self-contained bundle into WEB_DIR. Set ROOT
+# when invoking the script from a wrapper outside the project tree.
+#
+# Needs: emsdk (emcc + emcmake on PATH) in the pinned version from the
+# emsdk-version file next to this script, cmake, a host C compiler (cc),
+# curl and network access for the pinned browser assets below.
 set -eu
 
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+ROOT="${ROOT:-$(cd "$(dirname "$0")/.." && pwd)}"
 WEB_DIR="${WEB_DIR:-$ROOT/build/web}"        # the servable bundle
 OBJ_DIR="${OBJ_DIR:-$ROOT/build/emscripten}" # CMake working dir
-EMSDK_VERSION="$(cat "$ROOT/wasm/emsdk-version")"
+EMSDK_VERSION="$(cat "$(dirname "$0")/emsdk-version")"
 
 if ! command -v emcc >/dev/null 2>&1; then
   echo "error: emcc not found. Install the pinned Emscripten SDK ($EMSDK_VERSION) first:" >&2

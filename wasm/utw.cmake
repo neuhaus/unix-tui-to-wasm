@@ -12,6 +12,9 @@
 #   UTW_PRELOAD_DIR      directory preloaded read-only at the FS root
 #   UTW_WEB_DIR          servable bundle directory (default <build>/web)
 #   UTW_WEB_FILES        extra files staged into the bundle
+#   UTW_PTY_JS           xterm-pty glue (default <runtime>/emscripten-pty.js)
+#   UTW_PAGE             page template (default <runtime>/index.html.in)
+#   UTW_PRE_JS_EXTRA     extra --pre-js files, after the bundled pre.js
 #
 # utw_enable() compiles the termcap shim on every platform (so native builds
 # keep working), adds the Emscripten link options, and creates the bundle
@@ -38,6 +41,12 @@ endif()
 if(NOT DEFINED UTW_WEB_DIR)
   set(UTW_WEB_DIR "${CMAKE_BINARY_DIR}/web")
 endif()
+if(NOT DEFINED UTW_PTY_JS)
+  set(UTW_PTY_JS "${UTW_ROOT}/emscripten-pty.js")
+endif()
+if(NOT DEFINED UTW_PAGE)
+  set(UTW_PAGE "${UTW_ROOT}/index.html.in")
+endif()
 
 function(utw_enable target)
   target_sources(${target} PRIVATE "${UTW_ROOT}/tui.c")
@@ -58,9 +67,9 @@ function(utw_enable target)
   # native build must keep finding the real system headers.
   target_include_directories(${target} PRIVATE "${UTW_ROOT}/stub-include")
 
-  if(NOT EXISTS "${UTW_ROOT}/emscripten-pty.js")
+  if(NOT EXISTS "${UTW_PTY_JS}")
     message(FATAL_ERROR
-      "wasm/emscripten-pty.js is missing; run wasm/build-wasm.sh to fetch it")
+      "xterm-pty glue missing (${UTW_PTY_JS}); run wasm/build-wasm.sh to fetch it")
   endif()
 
   target_link_options(${target} PRIVATE
@@ -73,8 +82,15 @@ function(utw_enable target)
     -sEXIT_RUNTIME=1
     -sEXPORTED_RUNTIME_METHODS=FS
     -lidbfs.js
-    --js-library=${UTW_ROOT}/emscripten-pty.js
+    --js-library=${UTW_PTY_JS}
     --pre-js=${UTW_ROOT}/pre.js)
+  set(_link_deps "${UTW_ROOT}/pre.js;${UTW_PTY_JS}")
+  if(DEFINED UTW_PRE_JS_EXTRA)
+    foreach(_pre_js IN LISTS UTW_PRE_JS_EXTRA)
+      target_link_options(${target} PRIVATE --pre-js=${_pre_js})
+      list(APPEND _link_deps "${_pre_js}")
+    endforeach()
+  endif()
   if(DEFINED UTW_PRELOAD_DIR AND NOT UTW_PRELOAD_DIR STREQUAL "")
     target_link_options(${target} PRIVATE
       "--preload-file=${UTW_PRELOAD_DIR}@/")
@@ -83,7 +99,7 @@ function(utw_enable target)
   set_target_properties(${target} PROPERTIES
     OUTPUT_NAME "${target}"
     SUFFIX ".js"
-    LINK_DEPENDS "${UTW_ROOT}/pre.js;${UTW_ROOT}/emscripten-pty.js")
+    LINK_DEPENDS "${_link_deps}")
 
   if(UTW_PERSIST)
     set(UTW_PERSIST_JS true)
@@ -92,8 +108,7 @@ function(utw_enable target)
   endif()
   set(UTW_MODULE "${target}.js")
   file(MAKE_DIRECTORY "${UTW_WEB_DIR}")
-  configure_file("${UTW_ROOT}/index.html.in"
-                 "${UTW_WEB_DIR}/index.html" @ONLY)
+  configure_file("${UTW_PAGE}" "${UTW_WEB_DIR}/index.html" @ONLY)
 
   set(_out "$<TARGET_FILE_DIR:${target}>")
   add_custom_target(${target}_web ALL
