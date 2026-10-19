@@ -1,0 +1,5 @@
+# fetched by wasm/build-wasm.sh (checksum-pinned)
+/wasm/emscripten-pty.js
+
+# native and Emscripten build trees
+/build/
