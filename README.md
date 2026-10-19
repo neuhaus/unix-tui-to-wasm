@@ -61,4 +61,4 @@ The infrastructure was extracted from the wasm port of restoHack.
 
 ## License
 
-BSD-3-Clause, see [LICENSE](LICENSE).
+BSD-3-Clause, see [LICENCE](LICENCE).
