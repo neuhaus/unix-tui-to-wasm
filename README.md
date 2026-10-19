@@ -59,6 +59,6 @@ script variables `WEB_DIR`, `OBJ_DIR`, `ALLOW_UNTESTED_EMSDK=1`.
 
 The infrastructure was extracted from the wasm port of restoHack.
 
-## License
+## Licence
 
 BSD-3-Clause, see [LICENCE](LICENCE).
