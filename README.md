@@ -44,6 +44,9 @@ then `./build/demo`.
    ```
 
    The `<curses.h>`/`<termcap.h>` stubs live in `wasm/stub-include/`.
+   `tui.h` also declares `delay_output()` for animation timing (it yields
+   to the browser event loop); ports with their own fallback should treat
+   it as already provided in the Emscripten build.
 4. Run `./wasm/build-wasm.sh` (it uses your `CMakeLists.txt`); the bundle
    ends up in `build/web`.
 
