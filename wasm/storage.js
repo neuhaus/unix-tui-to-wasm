@@ -6,7 +6,7 @@
  * which case this manager stays silent.
  */
 
-export function createStorageManager({ filesElement, statusElement }) {
+export function createStorageManager({ filesElement, statusElement, displayName }) {
   let game = null;
   let before = {};
   const moduleOptions = {};
@@ -14,16 +14,20 @@ export function createStorageManager({ filesElement, statusElement }) {
   const enabled = () => moduleOptions.persist !== false;
   const root = () => moduleOptions.persistDir || "/data";
 
-  // File name -> "mtime:size", so a later snapshot can detect changes.
+  // Display name -> "mtime:size", so a later snapshot can detect changes.
+  // displayName() may map a raw file name for display, or return null to
+  // leave the file out of the listing.
   const snapshot = () => {
     const snap = {};
     if (!game) return snap;
     try {
       for (const f of game.FS.readdir(root())) {
         if (f === "." || f === "..") continue;
+        const name = displayName ? displayName(f) : f;
+        if (!name) continue;
         try {
           const st = game.FS.stat(root() + "/" + f);
-          snap[f] = st.mtime.getTime() + ":" + st.size;
+          snap[name] = st.mtime.getTime() + ":" + st.size;
         } catch (e) {}
       }
     } catch (e) {}
