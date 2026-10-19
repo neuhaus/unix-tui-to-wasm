@@ -58,3 +58,7 @@ script variables `WEB_DIR`, `OBJ_DIR`, `ALLOW_UNTESTED_EMSDK=1`.
 - No `-fstack-protector` with Emscripten 3.1.47 (the runtime is missing).
 
 The infrastructure was extracted from the wasm port of restoHack.
+
+## License
+
+BSD-3-Clause, see [LICENSE](LICENSE).
