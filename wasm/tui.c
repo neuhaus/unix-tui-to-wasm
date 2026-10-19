@@ -45,8 +45,14 @@ char *wasm_tgetstr(const char *id, char **area) {
   static char ce[] = "\033[K";
   static char cd[] = "\033[J";
   static char up[] = "\033[A";
+  static char do_[] = "\033[B";
   static char nd[] = "\033[C";
   static char bc[] = "\010";
+  static char kb[] = "\177";
+  static char ku[] = "\033[A";
+  static char kd[] = "\033[B";
+  static char kl[] = "\033[D";
+  static char kr[] = "\033[C";
   static char so[] = "\033[7m";
   static char se[] = "\033[27m";
 
@@ -62,10 +68,22 @@ char *wasm_tgetstr(const char *id, char **area) {
     return cd;
   if (strcmp(id, "up") == 0)
     return up;
+  if (strcmp(id, "do") == 0)
+    return do_;
   if (strcmp(id, "nd") == 0)
     return nd;
   if (strcmp(id, "bc") == 0)
     return bc;
+  if (strcmp(id, "kb") == 0)
+    return kb;
+  if (strcmp(id, "ku") == 0)
+    return ku;
+  if (strcmp(id, "kd") == 0)
+    return kd;
+  if (strcmp(id, "kl") == 0)
+    return kl;
+  if (strcmp(id, "kr") == 0)
+    return kr;
   if (strcmp(id, "so") == 0)
     return so;
   if (strcmp(id, "se") == 0)
@@ -82,8 +100,8 @@ int wasm_tgetnum(const char *id) {
 }
 
 int wasm_tgetflag(const char *id) {
-  (void)id;
-  return 0; /* NP, nx, bs, os: all absent */
+  /* xterm's backspace key works; NP, nx and os are absent. */
+  return strcmp(id, "bs") == 0;
 }
 
 char *wasm_tgoto(const char *cap, int col, int row) {
