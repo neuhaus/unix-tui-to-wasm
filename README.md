@@ -4,6 +4,7 @@ A small template for running historical Unix text programs (termcap) in the
 browser via Emscripten and xterm-pty: Emscripten build setup, a termcap shim,
 the xterm-pty bridge and an optional persistent filesystem (IDBFS), ready to
 copy into another project. A mini demo (`src/demo.c`) serves as a smoke test.
+See [FEATURES.md](FEATURES.md) for a list of everything it provides.
 
 ## Run the demo
 
