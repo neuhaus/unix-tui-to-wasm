@@ -125,3 +125,35 @@ int delay_output(int ms) {
     TUI_SLEEP((unsigned int)ms);
   return 0;
 }
+
+#ifdef __EMSCRIPTEN__
+/* Single-user process identity. Emscripten's libc has no passwd database
+ * (getpwuid() returns NULL) and rejects every setuid() call, which breaks
+ * programs written for setuid games. The browser has exactly one user and
+ * no privileges to drop, so these shims replace the libc functions in the
+ * link: the name and home directory come from $USER and $HOME (pre-js can
+ * set them), and setuid() succeeds without doing anything. */
+#include <pwd.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+struct passwd *getpwuid(uid_t uid) {
+  static struct passwd pw;
+  const char *name = getenv("USER");
+  const char *home = getenv("HOME");
+
+  pw.pw_name = (char *)(name && *name ? name : "player");
+  pw.pw_passwd = (char *)"*";
+  pw.pw_uid = uid;
+  pw.pw_gid = (gid_t)uid;
+  pw.pw_gecos = (char *)"";
+  pw.pw_dir = (char *)(home && *home ? home : "/");
+  pw.pw_shell = (char *)"/bin/sh";
+  return &pw;
+}
+
+int setuid(uid_t uid) {
+  (void)uid;
+  return 0;
+}
+#endif /* __EMSCRIPTEN__ */

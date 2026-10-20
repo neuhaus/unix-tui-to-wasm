@@ -47,6 +47,10 @@ then `./build/demo`.
    `tui.h` also declares `delay_output()` for animation timing (it yields
    to the browser event loop); ports with their own fallback should treat
    it as already provided in the Emscripten build.
+   Emscripten's libc has no passwd database and refuses `setuid()`, so
+   `tui.c` also replaces `getpwuid()` (name from `$USER`, home from `$HOME`)
+   and `setuid()` (always succeeds) with single-user versions. Programs that
+   look themselves up or drop privileges need no `#ifdef`.
 4. Run `./wasm/build-wasm.sh` (it uses your `CMakeLists.txt`); the bundle
    ends up in `build/web`.
 
