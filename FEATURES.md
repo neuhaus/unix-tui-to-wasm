@@ -5,25 +5,27 @@ A checklist of everything in the template, grouped by where it lives. See
 
 ## Build (`wasm/utw.cmake`, `wasm/build-wasm.sh`)
 
-- `utw_enable(<target>)` for CMake projects. It adds the shim sources, the
-  stub include path and the Emscripten link options, and creates a
-  `<target>_web` target that stages the servable bundle.
+- `utw_enable(<target>)` for CMake projects. It adds the runtime sources
+  (`compat.c`, the termcap shim unless disabled, and the selected curses
+  backend), the stub include path and the Emscripten link options, and creates
+  a `<target>_web` target that stages the servable bundle.
 - Link options set for you: Asyncify, ES6 module output, growable memory,
   exit-runtime, the `FS` runtime export and IDBFS.
 - Options: `UTW_TITLE`, `UTW_COLS`, `UTW_ROWS`, `UTW_PERSIST`,
   `UTW_PERSIST_DIR`, `UTW_CURSES` (`ON`/`OFF`/`pdcurses`), `UTW_TERMCAP`,
-  `UTW_PRELOAD_DIR`, `UTW_WEB_DIR`.
+  `UTW_PDCURSES_DIR`, `UTW_PRELOAD_DIR`, `UTW_WEB_DIR`.
 - Hooks: `UTW_PAGE` (page template), `UTW_WEB_FILES` (extra bundle files),
   `UTW_PTY_JS` (terminal glue), `UTW_PRE_JS_EXTRA` (extra pre-js).
 - `build-wasm.sh` builds and stages the bundle:
   - checks the active Emscripten against the pinned version in
-    `wasm/emsdk-version` (`ALLOW_UNTESTED_EMSDK=1` overrides);
-  - initializes the `wasm/PDCursesMod` submodule when the tree has git
-    metadata;
+    `emsdk-version` (`ALLOW_UNTESTED_EMSDK=1` overrides);
+  - initializes the git submodules next to it, including `PDCursesMod`, when
+    the tree has git metadata;
   - downloads xterm.js, xterm.css and xterm-pty, verified by SHA-256, so
     the finished page works offline;
   - configurable with `ROOT`, `WEB_DIR` and `OBJ_DIR`.
-- Pinned versions: Emscripten 7.0.0, `@xterm/xterm` 5.5.0, `xterm-pty` 0.12.0.
+- Pinned versions: Emscripten 7.0.0, `@xterm/xterm` 5.5.0, `xterm-pty` 0.12.0,
+  and the PDCursesMod commit recorded by the `wasm/PDCursesMod` submodule.
 - `wasm/patch-pty.py`: an idempotent patch applied to the checksum-verified
   xterm-pty glue so version 0.12.0 keeps working on Emscripten 7, which no
   longer defines the `$TTY__deps` metadata the glue edits.
@@ -44,10 +46,15 @@ A checklist of everything in the template, grouped by where it lives. See
   build only.
 - `setuid()` (`wasm/compat.c`): always succeeds (Emscripten's libc always
   fails). Emscripten build only.
-- Empty `curses.h` and `termcap.h` stubs, on the include path for the
-  Emscripten build, so unchanged `#include`s still resolve.
+- `fork()` and `execve()` (`wasm/compat.c`): fail with `ENOSYS`, like
+  Emscripten's own stubs. Defining them keeps Emscripten's libc stub object
+  out of the link; that object also defines `getpwuid()`/`getpwnam()` and
+  would otherwise collide with the shims above. Emscripten build only.
+- Empty `curses.h` and `termcap.h` fallbacks in `wasm/stub-include/`, on the
+  include path for the Emscripten build so unchanged `#include`s resolve.
+  A curses backend puts its real header in front of them.
 
-## Curses shim (`wasm/curses/`, enabled with `UTW_CURSES`)
+## Curses shim (`wasm/curses/`, enabled with `UTW_CURSES=ON`)
 
 A minimal curses implementation rendered with the same ANSI escapes and
 xterm-pty input as the termcap shim. It covers what Angband's GCU front end
@@ -74,7 +81,8 @@ Not implemented: pads, menus, forms, mouse, ACS line drawing, terminfo and
 ## PDCurses backend (`wasm/pdcurses.cmake`, `UTW_CURSES=pdcurses`)
 
 The full PDCursesMod curses library instead of the minimal shim, built from
-the pinned `wasm/PDCursesMod` submodule:
+the pinned `wasm/PDCursesMod` submodule (`UTW_PDCURSES_DIR` overrides its
+location):
 
 - VT port: plain ANSI escape output for xterm.js, plus xterm-pty input.
 - Wide characters (`PDC_WIDE`) and 32-bit `chtype` (`CHTYPE_32`) so color
@@ -84,7 +92,8 @@ the pinned `wasm/PDCursesMod` submodule:
   `#cols=N&rows=M` fragment works without rebuilding.
 - `PDC_napms()` is compiled with `usleep=utw_emscripten_usleep`
   (`wasm/pdcurses-emscripten.c`), so timed input yields to the browser event
-  loop instead of freezing it.
+  loop instead of freezing it. This workaround can go away once the
+  corresponding Emscripten fixes are merged upstream.
 - `delay_output()` comes from PDCurses; `tui.c` leaves its own copy out.
 - PDCurses' terminfo/termcap entry points are stubs, so `tui.c` stays the
   termcap implementation even with this backend.

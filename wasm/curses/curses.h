@@ -2,17 +2,18 @@
  * \file curses.h
  * \brief Minimal curses implementation for the browser (WebAssembly) port.
  *
- * Angband's GCU front end (main-gcu.c) is written against the curses API.
- * Emscripten has no curses, so this header and curses.c provide the small
- * subset of curses it uses, rendered with ANSI escapes into the xterm.js
- * terminal managed by unix-tui-to-wasm's xterm-pty bridge.
+ * Curses programs such as Angband's GCU front end (main-gcu.c) are written
+ * against the curses API. Emscripten has no curses, so this header and
+ * curses.c provide the small subset those programs use, rendered with ANSI
+ * escapes into the xterm.js terminal managed by unix-tui-to-wasm's xterm-pty
+ * bridge.
  *
- * Only the calls used by main-gcu.c (and the macros it relies on) are
- * implemented.  This is not a general curses replacement.
+ * Only a small, Angband-driven subset of curses is implemented.  This is not
+ * a general curses replacement; UTW_CURSES=pdcurses builds the real thing.
  */
 
-#ifndef ANG_BAND_WASM_CURSES_H
-#define ANG_BAND_WASM_CURSES_H
+#ifndef UTW_WASM_CURSES_H
+#define UTW_WASM_CURSES_H
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -152,4 +153,4 @@ int ungetch(int ch);
 int beep(void);
 int flash(void);
 
-#endif /* ANG_BAND_WASM_CURSES_H */
+#endif /* UTW_WASM_CURSES_H */

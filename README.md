@@ -2,9 +2,10 @@
 
 A small template for running historical Unix text programs (termcap or
 curses) in the browser via Emscripten and xterm-pty: Emscripten build setup, a
-termcap shim, an optional minimal curses layer, the xterm-pty bridge and an
-optional persistent filesystem (IDBFS), ready to copy into another project. A
-mini demo (`src/demo.c`) serves as a smoke test.
+termcap shim, two optional curses backends (a minimal built-in one or
+PDCursesMod's VT port), the xterm-pty bridge and an optional persistent
+filesystem (IDBFS), ready to copy into another project or to use as a git
+submodule. A mini demo (`src/demo.c`) serves as a smoke test.
 See [FEATURES.md](FEATURES.md) for a list of everything it provides.
 
 ## Run the demo
@@ -25,7 +26,9 @@ then `./build/demo`.
 
 ## Porting your own program
 
-1. Copy `wasm/` next to your sources.
+1. Copy `wasm/` next to your sources, or add it as a git submodule (see
+   below). A checkout includes the `wasm/PDCursesMod` submodule; after
+   cloning, fetch both levels with `git submodule update --init --recursive`.
 2. In CMake: set the options and register your target:
 
    ```cmake
@@ -50,31 +53,39 @@ then `./build/demo`.
    #endif
    ```
 
-   The `<curses.h>`/`<termcap.h>` stubs live in `wasm/stub-include/`.
-   `tui.h` also declares `delay_output()` for animation timing (it yields
-   to the browser event loop); ports with their own fallback should treat
-   it as already provided in the Emscripten build.
+   The `<curses.h>` and `<termcap.h>` files in `wasm/stub-include/` are
+   fallbacks so unchanged `#include`s resolve when no backend provides the
+   header: `UTW_CURSES ON` puts the minimal `wasm/curses/curses.h` first,
+   and `UTW_CURSES pdcurses` puts PDCursesMod's own header first.
+   `tui.h` also declares `delay_output()` for animation timing; it is
+   implemented in `tui.c` unless the curses backend provides it (PDCurses
+   does), and yields to the browser event loop. Ports with their own
+   fallback should treat it as already provided in the Emscripten build.
    Emscripten's libc has no passwd database and refuses `setuid()`, so
    `compat.c` replaces `getpwuid()`/`getpwnam()` (name from `$USER`, home
-   from `$HOME`) and `setuid()` (always succeeds) with single-user versions.
-   Programs that look themselves up or drop privileges need no `#ifdef`.
+   from `$HOME`) and `setuid()` (always succeeds) with single-user versions,
+   and stubs `fork()`/`execve()` to fail with `ENOSYS`. Programs that look
+   themselves up or drop privileges need no `#ifdef`.
    Programs already written against curses can set `UTW_CURSES ON` for the
    minimal bundled shim (`wasm/curses/`: windows, color pairs, wide character
    output, timed input) or `UTW_CURSES pdcurses` for the full PDCursesMod VT
    port (pads, panels, menus, mouse, 256 colors) from the
    `wasm/PDCursesMod` submodule.
-4. Run `./wasm/build-wasm.sh` (it uses your `CMakeLists.txt` and fetches the
-   `wasm/PDCursesMod` submodule if the tree has git metadata); the bundle
-   ends up in `build/web`.
+4. Run `./wasm/build-wasm.sh` (it uses your `CMakeLists.txt` and initializes
+   the git submodules, including `wasm/PDCursesMod`, when the tree has git
+   metadata); the bundle ends up in `build/web`.
 
 `wasm/` can also be a git submodule, e.g. at `wasm/utw`. Include
 `wasm/utw/wasm/utw.cmake` and invoke `wasm/utw/wasm/build-wasm.sh` with
 `ROOT` set to your project directory; the script keeps its fetched glue and
-patch next to itself, so it works from inside the submodule.
+patch next to itself, so it works from inside the submodule. PDCursesMod is
+then a nested submodule at `wasm/utw/wasm/PDCursesMod`, fetched by the same
+`git submodule update --init --recursive`.
 
-More options: `UTW_ROWS`, `UTW_PERSIST_DIR`, `UTW_WEB_DIR`, `UTW_WEB_FILES`,
-`UTW_PTY_JS`, `UTW_PAGE`, `UTW_PRE_JS_EXTRA`; script variables `WEB_DIR`,
-`OBJ_DIR`, `ALLOW_UNTESTED_EMSDK=1`.
+More options: `UTW_ROWS`, `UTW_PERSIST_DIR`, `UTW_TERMCAP`,
+`UTW_PDCURSES_DIR`, `UTW_WEB_DIR`, `UTW_WEB_FILES`, `UTW_PTY_JS`, `UTW_PAGE`,
+`UTW_PRE_JS_EXTRA`; script variables `WEB_DIR`, `OBJ_DIR`,
+`ALLOW_UNTESTED_EMSDK=1`.
 
 The geometry can also be chosen per load with a URL fragment, e.g.
 `index.html#cols=120&rows=40`.  The page resizes the terminal and the PTY
@@ -93,7 +104,8 @@ callback to `createStorageManager()` to map stored file names for display.
 - Fixed terminal; the geometry defaults to `UTW_COLS`/`UTW_ROWS` and can be
   overridden for a load with `#cols=N&rows=M`.  It does not change while the
   program runs.
-- No `fork`/`exec`: external pagers or editors need a replacement.
+- No `fork`/`exec`: the compat stubs fail with `ENOSYS`, so external pagers
+  or editors need a replacement.
 - IDBFS restores files with new inode numbers, so `stat().st_ino` cannot be used
   to recognize a file across page reloads. Validate saved files by content or a
   format-specific token instead.

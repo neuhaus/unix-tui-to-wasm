@@ -6,12 +6,13 @@
 #
 # PDCursesMod's VT port emits plain ANSI/VT escape sequences, which is exactly
 # what xterm.js draws, and it is a complete curses implementation: wide
-# characters, 256 colors, pads, panels, menus, mouse. Unlike wasm/curses/ it
-# needs no termcap shim (it provides delay_output() and stubs tgetent() /
-# tigetstr() itself), which is why UTW_TERMCAP defaults to OFF for this mode.
+# characters, 256 colors, pads, panels, menus, mouse. PDCurses provides its own
+# delay_output() and stubs the terminfo/termcap entry points, so the curses
+# backend and the termcap shim can be used together (tui.c leaves only its
+# delay_output() out).
 #
-# The sources are the pinned wasm/PDCursesMod submodule. Compile-time
-# adjustments for the browser:
+# The sources are the pinned wasm/PDCursesMod submodule; UTW_PDCURSES_DIR
+# overrides its location. Compile-time adjustments for the browser:
 #   PDC_WIDE, CHTYPE_32   wide-char API and 32-bit chtype, as Angband's
 #                         attribute tables store colors in an int
 #   usleep=...            PDC_napms() waits with usleep(); in the browser the
