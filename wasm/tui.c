@@ -28,6 +28,32 @@
 #include <stdio.h>
 #include <string.h>
 
+#ifdef __EMSCRIPTEN__
+#include <sys/ioctl.h>
+#include <unistd.h>
+
+/* The browser page can request a geometry with #cols=...&rows=...; the PTY
+ * reports it through TIOCGWINSZ.  Fall back to the compiled defaults. */
+static int wasm_term_cols(void)
+{
+  struct winsize ws;
+  if (ioctl(STDIN_FILENO, TIOCGWINSZ, &ws) == 0 && ws.ws_col > 0)
+    return ws.ws_col;
+  return UTW_COLS;
+}
+
+static int wasm_term_rows(void)
+{
+  struct winsize ws;
+  if (ioctl(STDIN_FILENO, TIOCGWINSZ, &ws) == 0 && ws.ws_row > 0)
+    return ws.ws_row;
+  return UTW_ROWS;
+}
+#else
+static int wasm_term_cols(void) { return UTW_COLS; }
+static int wasm_term_rows(void) { return UTW_ROWS; }
+#endif
+
 int wasm_tgetent(char *bp, const char *name) {
   (void)bp;
   (void)name;
@@ -93,9 +119,9 @@ char *wasm_tgetstr(const char *id, char **area) {
 
 int wasm_tgetnum(const char *id) {
   if (strcmp(id, "co") == 0)
-    return UTW_COLS;
+    return wasm_term_cols();
   if (strcmp(id, "li") == 0)
-    return UTW_ROWS;
+    return wasm_term_rows();
   return -1; /* sg, ...: absent */
 }
 

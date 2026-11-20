@@ -32,15 +32,29 @@
       import initEmscripten from "./@UTW_MODULE@";
       import { createStorageManager } from "./storage.js";
 
-      const term = new Terminal({ cols: @UTW_COLS@, rows: @UTW_ROWS@ });
+      // Optional geometry from the URL fragment, e.g. #cols=120&rows=40.
+      // The C side learns it from the PTY window size at startup, so it must
+      // be set before the Emscripten module runs (reload to change it).
+      const hashParams = new URLSearchParams(location.hash.slice(1));
+      function sizeParam(name, fallback) {
+        const value = Number.parseInt(hashParams.get(name), 10);
+        return Number.isFinite(value) && value > 0 ? value : fallback;
+      }
+      const termCols = sizeParam("cols", @UTW_COLS@);
+      const termRows = sizeParam("rows", @UTW_ROWS@);
+
+      // xterm-pty's PTY starts at 80x24.  Create the terminal at that size and
+      // resize it after attaching the PTY addon, so the addon's onResize hook
+      // updates the PTY window size that the program queries.
+      const term = new Terminal({ cols: 80, rows: 24 });
       term.open(document.getElementById("terminal"));
       term.focus();
       term.element.addEventListener("click", () => term.focus());
 
       // The terminal has a fixed character grid, so zooming scales the font
-      // instead of the widget: xterm.js re-renders the same 100x30 cells
-      // crisply at the new size and the character aspect ratio is kept.
-      // Clicking again restores the normal font size.
+      // instead of the widget: xterm.js re-renders the same cells crisply at
+      // the new size and the character aspect ratio is kept.  Clicking again
+      // restores the normal font size.
       const zoomButton = document.getElementById("zoom");
       const terminalElement = document.getElementById("terminal");
       const header = document.querySelector("header");
@@ -126,6 +140,7 @@
       // discipline, termios ioctls, window size and Ctrl+C handling.
       const { master: leader, slave: follower } = openpty();
       term.loadAddon(leader);
+      term.resize(termCols, termRows);
 
       const storage = createStorageManager({
         filesElement: document.getElementById("files"),

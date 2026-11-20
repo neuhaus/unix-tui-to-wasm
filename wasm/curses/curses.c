@@ -590,8 +590,17 @@ int refresh(void)
 WINDOW *initscr(void)
 {
 	int i, n;
+	struct winsize ws;
 
 	if (stdscr) return stdscr;
+
+	/* The PTY knows the real terminal geometry (the page sets it from the
+	 * #cols=...&rows=... fragment); fall back to the compiled defaults. */
+	if (ioctl(STDIN_FILENO, TIOCGWINSZ, &ws) == 0 &&
+	    ws.ws_row > 0 && ws.ws_col > 0) {
+		LINES = ws.ws_row;
+		COLS = ws.ws_col;
+	}
 
 	stdscr = newwin(LINES, COLS, 0, 0);
 	if (!stdscr) return NULL;

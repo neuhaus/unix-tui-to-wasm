@@ -31,7 +31,8 @@ A checklist of everything in the template, grouped by where it lives. See
   redirected by `tui.h` to ANSI-escape versions for one fixed xterm.js
   terminal.
   - String capabilities: `cm cl ho ce cd up do nd bc kb ku kd kl kr so se`.
-  - Numbers and flags: `co` and `li` from `UTW_COLS`/`UTW_ROWS`, and `bs`.
+  - Numbers and flags: `co` and `li` from the PTY window size (defaulting to
+    `UTW_COLS`/`UTW_ROWS`), and `bs`.
 - `delay_output(ms)`: a pause that yields to the browser, so pending output
   reaches the screen.
 - `getpwuid()` and `getpwnam()`: a single-user answer built from `$USER`
@@ -49,7 +50,8 @@ needs and nothing more:
 
 - Windows (`newwin`, `delwin`, `wresize`, `wmove`, `wclear`, `werase`,
   `wbkgd`, `whline`, `wclrtoeol`, `wattrset`), with wide character output
-  (`mvwaddnwstr`).
+  (`mvwaddnwstr`).  `initscr` takes the screen size from the PTY
+  (`TIOCGWINSZ`), so a `#cols=N&rows=M` fragment works without rebuilding.
 - Colors: `start_color`, `init_pair`, `init_color`, `use_default_colors`,
   256 colors and color pairs, plus `A_BOLD`, `A_REVERSE`, `A_BLINK`, `A_DIM`
   and `A_UNDERLINE`.
@@ -66,7 +68,8 @@ Not implemented: pads, menus, forms, mouse, ACS line drawing, terminfo and
 
 ## Browser page (`wasm/index.html.in`, `wasm/pre.js`, `wasm/storage.js`)
 
-- Generated page with an xterm.js terminal sized by `UTW_COLS`/`UTW_ROWS`, a
+- Generated page with an xterm.js terminal (default size from
+  `UTW_COLS`/`UTW_ROWS`, overridable per load with `#cols=N&rows=M`), a
   title, a stored-files line and a status line.
 - A `↔` button next to the title scales the terminal uniformly (keeping the
   character grid and aspect ratio) to fit the available window; clicking it

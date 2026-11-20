@@ -64,7 +64,13 @@ then `./build/demo`.
 
 More options: `UTW_ROWS`, `UTW_PERSIST_DIR`, `UTW_WEB_DIR`, `UTW_WEB_FILES`,
 `UTW_PTY_JS`, `UTW_PAGE`, `UTW_PRE_JS_EXTRA`; script variables `WEB_DIR`,
-`OBJ_DIR`, `ALLOW_UNTESTED_EMSDK=1`. The page can pass a `displayName`
+`OBJ_DIR`, `ALLOW_UNTESTED_EMSDK=1`.
+
+The geometry can also be chosen per load with a URL fragment, e.g.
+`index.html#cols=120&rows=40`.  The page resizes the terminal and the PTY
+before the program starts, and the shims read the size from the PTY, so no
+rebuild is needed.  Reload the page to change it; the geometry is fixed for
+the lifetime of the program.  `UTW_COLS`/`UTW_ROWS` remain the defaults. The page can pass a `displayName`
 callback to `createStorageManager()` to map stored file names for display.
 
 ## Limits
@@ -72,7 +78,9 @@ callback to `createStorageManager()` to map stored file names for display.
 - Only the termcap subset implemented in `wasm/tui.c` (no terminfo), plus the
   optional curses subset in `wasm/curses/`. The curses layer has no pads,
   menus, forms or mouse support, and no line-drawing (ACS) characters.
-- Fixed terminal; the geometry comes from `UTW_COLS`/`UTW_ROWS`.
+- Fixed terminal; the geometry defaults to `UTW_COLS`/`UTW_ROWS` and can be
+  overridden for a load with `#cols=N&rows=M`.  It does not change while the
+  program runs.
 - No `fork`/`exec`: external pagers or editors need a replacement.
 - IDBFS restores files with new inode numbers, so `stat().st_ino` cannot be used
   to recognize a file across page reloads. Validate saved files by content or a
