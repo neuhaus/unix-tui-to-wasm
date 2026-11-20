@@ -13,8 +13,8 @@ A checklist of everything in the template, grouped by where it lives. See
   exit-runtime, the `FS` runtime export and IDBFS.
 - Options: `UTW_TITLE`, `UTW_COLS`, `UTW_ROWS`, `UTW_PERSIST`,
   `UTW_PERSIST_DIR`, `UTW_CURSES` (`ON`/`OFF`/`pdcurses`), `UTW_TERMCAP`,
-  `UTW_MINIFY`, `UTW_LZ4`, `UTW_PDCURSES_DIR`, `UTW_PRELOAD_DIR`,
-  `UTW_WEB_DIR`.
+  `UTW_MINIFY`, `UTW_LZ4`, `UTW_OUTPUT_NAME`, `UTW_PDCURSES_DIR`,
+  `UTW_PRELOAD_DIR`, `UTW_WEB_DIR`.
 - Hooks: `UTW_PAGE` (page template), `UTW_WEB_FILES` (extra bundle files),
   `UTW_PTY_JS` (terminal glue), `UTW_PRE_JS_EXTRA` (extra pre-js).
 - `build-wasm.sh` builds and stages the bundle:

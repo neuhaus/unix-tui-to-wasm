@@ -15,6 +15,9 @@
 #   UTW_TERMCAP          build the termcap shim (default ON; with
 #                        UTW_CURSES=pdcurses its delay_output() is left out
 #                        because PDCurses provides one)
+#   UTW_OUTPUT_NAME      basename of the generated .js/.wasm/.data files
+#                        (default: the CMake target name; e.g. a target named
+#                        OurExecutable can emit angband.js)
 #   UTW_MINIFY           minify the generated JavaScript (default ON; OFF
 #                        passes --minify 0 for readable output)
 #   UTW_LZ4              LZ4-compress the preloaded files (default OFF; makes
@@ -151,8 +154,14 @@ function(utw_enable target)
       "--preload-file=${UTW_PRELOAD_DIR}@/")
   endif()
 
+  if(DEFINED UTW_OUTPUT_NAME AND NOT UTW_OUTPUT_NAME STREQUAL "")
+    set(_utw_output_name "${UTW_OUTPUT_NAME}")
+  else()
+    set(_utw_output_name "${target}")
+  endif()
+
   set_target_properties(${target} PROPERTIES
-    OUTPUT_NAME "${target}"
+    OUTPUT_NAME "${_utw_output_name}"
     SUFFIX ".js"
     LINK_DEPENDS "${_link_deps}")
 
@@ -161,7 +170,7 @@ function(utw_enable target)
   else()
     set(UTW_PERSIST_JS false)
   endif()
-  set(UTW_MODULE "${target}.js")
+  set(UTW_MODULE "${_utw_output_name}.js")
   file(MAKE_DIRECTORY "${UTW_WEB_DIR}")
   configure_file("${UTW_PAGE}" "${UTW_WEB_DIR}/index.html" @ONLY)
 
@@ -169,9 +178,9 @@ function(utw_enable target)
   add_custom_target(${target}_web ALL
     COMMAND ${CMAKE_COMMAND} -E make_directory "${UTW_WEB_DIR}"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "$<TARGET_FILE:${target}>" "${UTW_WEB_DIR}/${target}.js"
+            "$<TARGET_FILE:${target}>" "${UTW_WEB_DIR}/${_utw_output_name}.js"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${_out}/${target}.wasm" "${UTW_WEB_DIR}/${target}.wasm"
+            "${_out}/${_utw_output_name}.wasm" "${UTW_WEB_DIR}/${_utw_output_name}.wasm"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
             "${UTW_ROOT}/storage.js" "${UTW_WEB_DIR}/storage.js"
     DEPENDS ${target}
@@ -181,7 +190,7 @@ function(utw_enable target)
   if(DEFINED UTW_PRELOAD_DIR AND NOT UTW_PRELOAD_DIR STREQUAL "")
     add_custom_command(TARGET ${target}_web POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E copy_if_different
-              "${_out}/${target}.data" "${UTW_WEB_DIR}/${target}.data"
+              "${_out}/${_utw_output_name}.data" "${UTW_WEB_DIR}/${_utw_output_name}.data"
       VERBATIM)
   endif()
   if(DEFINED UTW_WEB_FILES)

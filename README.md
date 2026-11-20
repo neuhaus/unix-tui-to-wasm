@@ -83,9 +83,9 @@ then a nested submodule at `wasm/utw/wasm/PDCursesMod`, fetched by the same
 `git submodule update --init --recursive`.
 
 More options: `UTW_ROWS`, `UTW_PERSIST_DIR`, `UTW_TERMCAP`, `UTW_MINIFY`,
-`UTW_LZ4`, `UTW_PDCURSES_DIR`, `UTW_WEB_DIR`, `UTW_WEB_FILES`, `UTW_PTY_JS`,
-`UTW_PAGE`, `UTW_PRE_JS_EXTRA`; script variables `WEB_DIR`, `OBJ_DIR`,
-`BUILD_TYPE`, `ALLOW_UNTESTED_EMSDK=1`.
+`UTW_LZ4`, `UTW_OUTPUT_NAME`, `UTW_PDCURSES_DIR`, `UTW_WEB_DIR`,
+`UTW_WEB_FILES`, `UTW_PTY_JS`, `UTW_PAGE`, `UTW_PRE_JS_EXTRA`; script
+variables `WEB_DIR`, `OBJ_DIR`, `BUILD_TYPE`, `ALLOW_UNTESTED_EMSDK=1`.
 
 The browser build defaults to `MinSizeRel` and minified JavaScript, which
 shrinks the wasm and the glue noticeably.  `BUILD_TYPE=Release` trades size for
