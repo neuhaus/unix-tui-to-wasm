@@ -11,9 +11,10 @@
 set -eu
 
 ROOT="${ROOT:-$(cd "$(dirname "$0")/.." && pwd)}"
+RUNTIME_DIR="$(cd "$(dirname "$0")" && pwd)"
 WEB_DIR="${WEB_DIR:-$ROOT/build/web}"        # the servable bundle
 OBJ_DIR="${OBJ_DIR:-$ROOT/build/emscripten}" # CMake working dir
-EMSDK_VERSION="$(cat "$(dirname "$0")/emsdk-version")"
+EMSDK_VERSION="$(cat "$RUNTIME_DIR/emsdk-version")"
 
 # PDCursesMod, the curses backend for UTW_CURSES=pdcurses, is a submodule.
 # Skip silently when this tree was copied without git metadata; CMake then
@@ -70,9 +71,9 @@ fetch "$PTY/index.mjs"         "$WEB_DIR/xterm-pty.js"   9d1ab8c5f3af23ddc835f9c
 # The link step references the glue at this gitignored source-tree path.
 # xterm-pty 0.12.0 still edits the $TTY__deps metadata that Emscripten 7
 # removed, so patch the checksum-verified download for the current SDK.
-fetch "$PTY/emscripten-pty.js" "$ROOT/wasm/emscripten-pty.js.orig" 93d474cb4141461145c6a01aa76bbe6f75313b562051519c8bcd21d367125315
-python3 "$(dirname "$0")/patch-pty.py" \
-  "$ROOT/wasm/emscripten-pty.js.orig" "$ROOT/wasm/emscripten-pty.js"
+fetch "$PTY/emscripten-pty.js" "$RUNTIME_DIR/emscripten-pty.js.orig" 93d474cb4141461145c6a01aa76bbe6f75313b562051519c8bcd21d367125315
+python3 "$RUNTIME_DIR/patch-pty.py" \
+  "$RUNTIME_DIR/emscripten-pty.js.orig" "$RUNTIME_DIR/emscripten-pty.js"
 
 # The default build includes the <target>_web CMake target, which stages
 # the runtime files into WEB_DIR; the fetched assets are already there.

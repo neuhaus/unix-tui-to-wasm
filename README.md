@@ -67,6 +67,11 @@ then `./build/demo`.
    `wasm/PDCursesMod` submodule if the tree has git metadata); the bundle
    ends up in `build/web`.
 
+`wasm/` can also be a git submodule, e.g. at `wasm/utw`. Include
+`wasm/utw/wasm/utw.cmake` and invoke `wasm/utw/wasm/build-wasm.sh` with
+`ROOT` set to your project directory; the script keeps its fetched glue and
+patch next to itself, so it works from inside the submodule.
+
 More options: `UTW_ROWS`, `UTW_PERSIST_DIR`, `UTW_WEB_DIR`, `UTW_WEB_FILES`,
 `UTW_PTY_JS`, `UTW_PAGE`, `UTW_PRE_JS_EXTRA`; script variables `WEB_DIR`,
 `OBJ_DIR`, `ALLOW_UNTESTED_EMSDK=1`.
