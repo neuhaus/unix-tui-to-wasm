@@ -146,55 +146,14 @@ void wasm_tputs(const char *str, int affcnt, int (*outc)(int)) {
     outc((unsigned char)*str++);
 }
 
+/* Pause for effect; on Emscripten this yields to the browser event loop,
+ * which also lets pending terminal output flush to xterm.js. A curses
+ * backend that provides delay_output() itself defines UTW_NO_DELAY_OUTPUT
+ * (see pdcurses.cmake). */
+#ifndef UTW_NO_DELAY_OUTPUT
 int delay_output(int ms) {
   if (ms > 0)
     TUI_SLEEP((unsigned int)ms);
   return 0;
 }
-
-#ifdef __EMSCRIPTEN__
-/* Single-user process identity. Emscripten's libc has no passwd database
- * (getpwuid() returns NULL) and rejects every setuid() call, which breaks
- * programs written for setuid games. The browser has exactly one user and
- * no privileges to drop, so these shims replace the libc functions in the
- * link: the name and home directory come from $USER and $HOME (pre-js can
- * set them), and setuid() succeeds without doing anything. */
-#include <pwd.h>
-#include <stdlib.h>
-#include <unistd.h>
-
-static struct passwd *wasm_passwd(uid_t uid, const char *name)
-{
-  static struct passwd pw;
-  const char *user = getenv("USER");
-  const char *home = getenv("HOME");
-
-  if (!user || !*user) user = "player";
-  if (name && strcmp(name, user) != 0) return NULL;
-
-  pw.pw_name = (char *)user;
-  pw.pw_passwd = (char *)"*";
-  pw.pw_uid = uid;
-  pw.pw_gid = (gid_t)uid;
-  pw.pw_gecos = (char *)"";
-  pw.pw_dir = (char *)(home && *home ? home : "/");
-  pw.pw_shell = (char *)"/bin/sh";
-  return &pw;
-}
-
-struct passwd *getpwuid(uid_t uid)
-{
-  return wasm_passwd(uid, NULL);
-}
-
-struct passwd *getpwnam(const char *name)
-{
-  return wasm_passwd(getuid(), name);
-}
-
-int setuid(uid_t uid)
-{
-  (void)uid;
-  return 0;
-}
-#endif /* __EMSCRIPTEN__ */
+#endif

@@ -11,12 +11,15 @@ A checklist of everything in the template, grouped by where it lives. See
 - Link options set for you: Asyncify, ES6 module output, growable memory,
   exit-runtime, the `FS` runtime export and IDBFS.
 - Options: `UTW_TITLE`, `UTW_COLS`, `UTW_ROWS`, `UTW_PERSIST`,
-  `UTW_PERSIST_DIR`, `UTW_CURSES`, `UTW_PRELOAD_DIR`, `UTW_WEB_DIR`.
+  `UTW_PERSIST_DIR`, `UTW_CURSES` (`ON`/`OFF`/`pdcurses`), `UTW_TERMCAP`,
+  `UTW_PRELOAD_DIR`, `UTW_WEB_DIR`.
 - Hooks: `UTW_PAGE` (page template), `UTW_WEB_FILES` (extra bundle files),
   `UTW_PTY_JS` (terminal glue), `UTW_PRE_JS_EXTRA` (extra pre-js).
 - `build-wasm.sh` builds and stages the bundle:
   - checks the active Emscripten against the pinned version in
     `wasm/emsdk-version` (`ALLOW_UNTESTED_EMSDK=1` overrides);
+  - initializes the `wasm/PDCursesMod` submodule when the tree has git
+    metadata;
   - downloads xterm.js, xterm.css and xterm-pty, verified by SHA-256, so
     the finished page works offline;
   - configurable with `ROOT`, `WEB_DIR` and `OBJ_DIR`.
@@ -25,7 +28,7 @@ A checklist of everything in the template, grouped by where it lives. See
   xterm-pty glue so version 0.12.0 keeps working on Emscripten 7, which no
   longer defines the `$TTY__deps` metadata the glue edits.
 
-## C shims (`wasm/tui.c`, `wasm/tui.h`, `wasm/stub-include/`)
+## C shims (`wasm/tui.c`, `wasm/compat.c`, `wasm/tui.h`, `wasm/stub-include/`)
 
 - Termcap: `tgetent`, `tgetstr`, `tgetnum`, `tgetflag`, `tgoto` and `tputs`,
   redirected by `tui.h` to ANSI-escape versions for one fixed xterm.js
@@ -34,11 +37,13 @@ A checklist of everything in the template, grouped by where it lives. See
   - Numbers and flags: `co` and `li` from the PTY window size (defaulting to
     `UTW_COLS`/`UTW_ROWS`), and `bs`.
 - `delay_output(ms)`: a pause that yields to the browser, so pending output
-  reaches the screen.
-- `getpwuid()` and `getpwnam()`: a single-user answer built from `$USER`
-  and `$HOME` (Emscripten's libc returns `NULL`). Emscripten build only.
-- `setuid()`: always succeeds (Emscripten's libc always fails). Emscripten
+  reaches the screen. Left out when the curses backend provides its own
+  (`UTW_CURSES=pdcurses` defines `UTW_NO_DELAY_OUTPUT`).
+- `getpwuid()` and `getpwnam()` (`wasm/compat.c`): a single-user answer built
+  from `$USER` and `$HOME` (Emscripten's libc returns `NULL`). Emscripten
   build only.
+- `setuid()` (`wasm/compat.c`): always succeeds (Emscripten's libc always
+  fails). Emscripten build only.
 - Empty `curses.h` and `termcap.h` stubs, on the include path for the
   Emscripten build, so unchanged `#include`s still resolve.
 
@@ -65,6 +70,24 @@ needs and nothing more:
 
 Not implemented: pads, menus, forms, mouse, ACS line drawing, terminfo and
 `resizeterm` (the terminal geometry is fixed).
+
+## PDCurses backend (`wasm/pdcurses.cmake`, `UTW_CURSES=pdcurses`)
+
+The full PDCursesMod curses library instead of the minimal shim, built from
+the pinned `wasm/PDCursesMod` submodule:
+
+- VT port: plain ANSI escape output for xterm.js, plus xterm-pty input.
+- Wide characters (`PDC_WIDE`) and 32-bit `chtype` (`CHTYPE_32`) so color
+  pairs fit in an `int`, as Angband's attribute tables expect.
+- 256 colors, pads, panels, menus, mouse and the usual curses surface.
+- `initscr` takes the geometry from the PTY (`TIOCGWINSZ`), so the
+  `#cols=N&rows=M` fragment works without rebuilding.
+- `PDC_napms()` is compiled with `usleep=utw_emscripten_usleep`
+  (`wasm/pdcurses-emscripten.c`), so timed input yields to the browser event
+  loop instead of freezing it.
+- `delay_output()` comes from PDCurses; `tui.c` leaves its own copy out.
+- PDCurses' terminfo/termcap entry points are stubs, so `tui.c` stays the
+  termcap implementation even with this backend.
 
 ## Browser page (`wasm/index.html.in`, `wasm/pre.js`, `wasm/storage.js`)
 

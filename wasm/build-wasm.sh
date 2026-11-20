@@ -15,6 +15,13 @@ WEB_DIR="${WEB_DIR:-$ROOT/build/web}"        # the servable bundle
 OBJ_DIR="${OBJ_DIR:-$ROOT/build/emscripten}" # CMake working dir
 EMSDK_VERSION="$(cat "$(dirname "$0")/emsdk-version")"
 
+# PDCursesMod, the curses backend for UTW_CURSES=pdcurses, is a submodule.
+# Skip silently when this tree was copied without git metadata; CMake then
+# reports the missing sources with instructions.
+if [ -d "$ROOT/.git" ] && [ -f "$ROOT/.gitmodules" ]; then
+  git -C "$ROOT" submodule update --init --recursive
+fi
+
 if ! command -v emcc >/dev/null 2>&1; then
   echo "error: emcc not found. Install the pinned Emscripten SDK ($EMSDK_VERSION) first:" >&2
   echo "  git clone https://github.com/emscripten-core/emsdk.git" >&2

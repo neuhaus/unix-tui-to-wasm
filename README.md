@@ -32,11 +32,15 @@ then `./build/demo`.
    set(UTW_TITLE "my program")
    set(UTW_COLS 80)              # optional, default 80x24
    set(UTW_PERSIST ON)           # optional: IDBFS mounted at /data
-   set(UTW_CURSES ON)            # optional: build the curses shim
+   set(UTW_CURSES pdcurses)      # optional: full curses via PDCursesMod
    set(UTW_PRELOAD_DIR "${CMAKE_SOURCE_DIR}/static") # optional data files
    include(${CMAKE_SOURCE_DIR}/wasm/utw.cmake)
    utw_enable(myprogram)
    ```
+
+   `UTW_CURSES` also accepts `ON` for the minimal bundled shim and `OFF`
+   (the default) for termcap-only programs. `UTW_TERMCAP` (default `ON`)
+   controls the termcap shim independently.
 
 3. Route termcap calls to the shims:
 
@@ -51,15 +55,16 @@ then `./build/demo`.
    to the browser event loop); ports with their own fallback should treat
    it as already provided in the Emscripten build.
    Emscripten's libc has no passwd database and refuses `setuid()`, so
-   `tui.c` also replaces `getpwuid()`/`getpwnam()` (name from `$USER`, home
+   `compat.c` replaces `getpwuid()`/`getpwnam()` (name from `$USER`, home
    from `$HOME`) and `setuid()` (always succeeds) with single-user versions.
    Programs that look themselves up or drop privileges need no `#ifdef`.
-   Programs already written against curses can set `UTW_CURSES ON` instead of
-   using termcap directly. The `wasm/curses/` layer then provides the subset
-   of curses used by Angband's GCU front end (windows, color pairs, wide
-   character output, timed input) on top of the same ANSI terminal. See its
-   header for the implemented calls and the README's "Limits" section.
-4. Run `./wasm/build-wasm.sh` (it uses your `CMakeLists.txt`); the bundle
+   Programs already written against curses can set `UTW_CURSES ON` for the
+   minimal bundled shim (`wasm/curses/`: windows, color pairs, wide character
+   output, timed input) or `UTW_CURSES pdcurses` for the full PDCursesMod VT
+   port (pads, panels, menus, mouse, 256 colors) from the
+   `wasm/PDCursesMod` submodule.
+4. Run `./wasm/build-wasm.sh` (it uses your `CMakeLists.txt` and fetches the
+   `wasm/PDCursesMod` submodule if the tree has git metadata); the bundle
    ends up in `build/web`.
 
 More options: `UTW_ROWS`, `UTW_PERSIST_DIR`, `UTW_WEB_DIR`, `UTW_WEB_FILES`,
@@ -75,9 +80,11 @@ callback to `createStorageManager()` to map stored file names for display.
 
 ## Limits
 
-- Only the termcap subset implemented in `wasm/tui.c` (no terminfo), plus the
-  optional curses subset in `wasm/curses/`. The curses layer has no pads,
-  menus, forms or mouse support, and no line-drawing (ACS) characters.
+- Only the termcap subset implemented in `wasm/tui.c` (no terminfo), plus a
+  curses backend of your choice: the minimal `wasm/curses/` shim or
+  PDCursesMod's VT port. The minimal shim has no pads, menus, forms or mouse
+  support, and no line-drawing (ACS) characters; PDCurses' terminfo/termcap
+  functions are stubs, so mixed termcap code still needs `tui.c`.
 - Fixed terminal; the geometry defaults to `UTW_COLS`/`UTW_ROWS` and can be
   overridden for a load with `#cols=N&rows=M`.  It does not change while the
   program runs.
