@@ -6,14 +6,24 @@
     <title>@UTW_TITLE@</title>
     <link rel="stylesheet" href="./xterm.css" />
     <style>
-      :root{color-scheme:dark}body{background:#0c0c0c;color:#ccc;font-family:monospace;margin:0;display:flex;flex-direction:column;align-items:center;min-height:100vh}header{text-align:center;padding:12px 16px 4px}header h1{font-size:16px;margin:0 0 4px;font-weight:normal}#terminal{border:1px solid #333;padding:4px;background:#000}#files{font-size:12px;color:#888;padding:8px 16px 0}#status{font-size:12px;color:#888;padding:8px 16px 16px;text-align:center;max-width:720px}
+      :root{color-scheme:dark}
+      body{background:#0c0c0c;color:#ccc;font-family:monospace;margin:0;display:flex;flex-direction:column;align-items:center;min-height:100vh}
+      header{text-align:center;padding:12px 16px 4px}
+      header h1{font-size:16px;margin:0 0 4px;font-weight:normal}
+      #zoom{margin-left:6px;padding:1px 7px 2px;font:inherit;font-size:15px;line-height:1;color:#999;background:#1a1a1a;border:1px solid #3a3a3a;border-radius:4px;cursor:pointer;vertical-align:middle}
+      #zoom:hover{color:#fff;border-color:#666}
+      #zoom[aria-pressed="true"]{color:#fff;background:#2a2a2a;border-color:#777}
+      #terminal-wrap{display:flex;justify-content:center;width:100%}
+      #terminal{border:1px solid #333;padding:4px;background:#000}
+      #files{font-size:12px;color:#888;padding:8px 16px 0}
+      #status{font-size:12px;color:#888;padding:8px 16px 16px;text-align:center;max-width:720px}
     </style>
   </head>
   <body>
     <header>
-      <h1>@UTW_TITLE@</h1>
+      <h1>@UTW_TITLE@ <button id="zoom" type="button" title="Fit terminal to window" aria-pressed="false">&harr;</button></h1>
     </header>
-    <div id="terminal"></div>
+    <div id="terminal-wrap"><div id="terminal"></div></div>
     <div id="files"></div>
     <div id="status"></div>
     <script src="./xterm.js"></script>
@@ -26,6 +36,91 @@
       term.open(document.getElementById("terminal"));
       term.focus();
       term.element.addEventListener("click", () => term.focus());
+
+      // The terminal has a fixed character grid, so zooming scales the font
+      // instead of the widget: xterm.js re-renders the same 100x30 cells
+      // crisply at the new size and the character aspect ratio is kept.
+      // Clicking again restores the normal font size.
+      const zoomButton = document.getElementById("zoom");
+      const terminalElement = document.getElementById("terminal");
+      const header = document.querySelector("header");
+      const filesElement = document.getElementById("files");
+      const statusElement = document.getElementById("status");
+      const baseFontSize = term.options.fontSize || 15;
+      let zoomed = false;
+      let zoomRun = 0;
+
+      const nextFrame = () =>
+        new Promise((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+      function targetArea(w, h) {
+        const margin = 8;
+        const fullW = window.innerWidth - margin * 2;
+        const fullH = window.innerHeight - header.offsetHeight - margin * 2;
+        const widthScale = fullW / w;
+        const fullHeightScale = fullH / h;
+
+        // If height is the limiting dimension, use all of it: the terminal
+        // is as large as possible and the lines below may fall out of view
+        // (the page scrolls).  Otherwise spare room for them so they stay
+        // visible under the terminal.
+        if (fullHeightScale <= widthScale) {
+          return { w: fullW, h: fullH };
+        }
+        const below = filesElement.offsetHeight + statusElement.offsetHeight;
+        return { w: fullW, h: Math.max(1, fullH - below) };
+      }
+
+      async function layoutZoom() {
+        const run = ++zoomRun;
+        if (!zoomed) {
+          term.options.fontSize = baseFontSize;
+          await nextFrame();
+          return;
+        }
+        // Cell metrics are (nearly) linear in the font size: set the size
+        // that should fill the available area, then correct for rounding.
+        term.options.fontSize = baseFontSize;
+        await nextFrame();
+        if (run !== zoomRun) return;
+        const baseW = terminalElement.offsetWidth;
+        const baseH = terminalElement.offsetHeight;
+        if (baseW <= 0 || baseH <= 0) return;
+        const area = targetArea(baseW, baseH);
+        if (area.w <= 0 || area.h <= 0) return;
+        for (let i = 0; i < 3; i++) {
+          const w = terminalElement.offsetWidth;
+          const h = terminalElement.offsetHeight;
+          if (w <= 0 || h <= 0) return;
+          const scale = Math.min(area.w / w, area.h / h);
+          if (Math.abs(scale - 1) < 0.02) break;
+          term.options.fontSize = Math.max(4, term.options.fontSize * scale);
+          await nextFrame();
+          if (run !== zoomRun) return;
+        }
+      }
+
+      zoomButton.addEventListener("click", () => {
+        zoomed = !zoomed;
+        document.body.classList.toggle("zoomed", zoomed);
+        zoomButton.setAttribute("aria-pressed", zoomed ? "true" : "false");
+        zoomButton.title = zoomed ? "Restore normal size" : "Fit terminal to window";
+        layoutZoom();
+        term.focus();
+      });
+      window.addEventListener("resize", () => {
+        if (zoomed) layoutZoom();
+      });
+      // The stored-files/status lines can change height (the storage manager
+      // fills them in); keep the zoom fitted to the remaining space.
+      if (typeof ResizeObserver !== "undefined") {
+        const observer = new ResizeObserver(() => {
+          if (zoomed) layoutZoom();
+        });
+        observer.observe(filesElement);
+        observer.observe(statusElement);
+      }
 
       // PTY layer between xterm.js and the Emscripten program: line
       // discipline, termios ioctls, window size and Ctrl+C handling.

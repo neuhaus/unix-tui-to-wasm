@@ -68,6 +68,12 @@ Not implemented: pads, menus, forms, mouse, ACS line drawing, terminfo and
 
 - Generated page with an xterm.js terminal sized by `UTW_COLS`/`UTW_ROWS`, a
   title, a stored-files line and a status line.
+- A `↔` button next to the title scales the terminal uniformly (keeping the
+  character grid and aspect ratio) to fit the available window; clicking it
+  again restores the normal size.  The scale is recomputed on window resize.
+  If width is the limit, the stored-files and status lines stay visible under
+  the terminal; if height is the limit, the terminal is enlarged as much as
+  possible and those lines may move below the fold (the page scrolls).
 - Terminal I/O through xterm-pty: line discipline, termios, window size and
   Ctrl+C.
 - Optional persistent storage (`pre.js`): the virtual filesystem is mounted
