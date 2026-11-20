@@ -82,10 +82,18 @@ patch next to itself, so it works from inside the submodule. PDCursesMod is
 then a nested submodule at `wasm/utw/wasm/PDCursesMod`, fetched by the same
 `git submodule update --init --recursive`.
 
-More options: `UTW_ROWS`, `UTW_PERSIST_DIR`, `UTW_TERMCAP`,
-`UTW_PDCURSES_DIR`, `UTW_WEB_DIR`, `UTW_WEB_FILES`, `UTW_PTY_JS`, `UTW_PAGE`,
-`UTW_PRE_JS_EXTRA`; script variables `WEB_DIR`, `OBJ_DIR`,
-`ALLOW_UNTESTED_EMSDK=1`.
+More options: `UTW_ROWS`, `UTW_PERSIST_DIR`, `UTW_TERMCAP`, `UTW_MINIFY`,
+`UTW_LZ4`, `UTW_PDCURSES_DIR`, `UTW_WEB_DIR`, `UTW_WEB_FILES`, `UTW_PTY_JS`,
+`UTW_PAGE`, `UTW_PRE_JS_EXTRA`; script variables `WEB_DIR`, `OBJ_DIR`,
+`BUILD_TYPE`, `ALLOW_UNTESTED_EMSDK=1`.
+
+The browser build defaults to `MinSizeRel` and minified JavaScript, which
+shrinks the wasm and the glue noticeably.  `BUILD_TYPE=Release` trades size for
+speed, and `UTW_MINIFY=OFF` keeps the generated JS readable.  Serve the bundle
+with gzip or Brotli: for Angband, the 4.0 MB on disk are about 0.9 MB over the
+wire.  `UTW_LZ4=ON` compresses the preloaded files and saves roughly another
+0.5 MB on disk, but that data is then already compressed and does not benefit
+from HTTP compression.
 
 The geometry can also be chosen per load with a URL fragment, e.g.
 `index.html#cols=120&rows=40`.  The page resizes the terminal and the PTY

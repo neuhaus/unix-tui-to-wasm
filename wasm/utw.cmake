@@ -15,6 +15,11 @@
 #   UTW_TERMCAP          build the termcap shim (default ON; with
 #                        UTW_CURSES=pdcurses its delay_output() is left out
 #                        because PDCurses provides one)
+#   UTW_MINIFY           minify the generated JavaScript (default ON; OFF
+#                        passes --minify 0 for readable output)
+#   UTW_LZ4              LZ4-compress the preloaded files (default OFF; makes
+#                        the bundle smaller on disk, but the data is then
+#                        already compressed for HTTP transfer)
 #   UTW_TITLE            browser page title
 #   UTW_PRELOAD_DIR      directory preloaded read-only at the FS root
 #   UTW_WEB_DIR          servable bundle directory (default <build>/web)
@@ -60,6 +65,12 @@ if(NOT _utw_curses_mode STREQUAL "off"
 endif()
 if(NOT DEFINED UTW_TERMCAP)
   set(UTW_TERMCAP ON)
+endif()
+if(NOT DEFINED UTW_MINIFY)
+  set(UTW_MINIFY ON)
+endif()
+if(NOT DEFINED UTW_LZ4)
+  set(UTW_LZ4 OFF)
 endif()
 if(NOT DEFINED UTW_TITLE)
   set(UTW_TITLE "unix-tui-to-wasm")
@@ -111,7 +122,6 @@ function(utw_enable target)
   endif()
 
   target_link_options(${target} PRIVATE
-    --minify 0
     -sMODULARIZE=1
     -sEXPORT_ES6=1
     -sASYNCIFY=1
@@ -122,6 +132,13 @@ function(utw_enable target)
     -lidbfs.js
     --js-library=${UTW_PTY_JS}
     --pre-js=${UTW_ROOT}/pre.js)
+  if(NOT UTW_MINIFY)
+    target_link_options(${target} PRIVATE --minify 0)
+  endif()
+  if(UTW_LZ4)
+    # Compresses the preloaded data; see UTW_LZ4 above.
+    target_link_options(${target} PRIVATE -sLZ4=1)
+  endif()
   set(_link_deps "${UTW_ROOT}/pre.js;${UTW_PTY_JS}")
   if(DEFINED UTW_PRE_JS_EXTRA)
     foreach(_pre_js IN LISTS UTW_PRE_JS_EXTRA)

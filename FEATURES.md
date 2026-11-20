@@ -13,7 +13,8 @@ A checklist of everything in the template, grouped by where it lives. See
   exit-runtime, the `FS` runtime export and IDBFS.
 - Options: `UTW_TITLE`, `UTW_COLS`, `UTW_ROWS`, `UTW_PERSIST`,
   `UTW_PERSIST_DIR`, `UTW_CURSES` (`ON`/`OFF`/`pdcurses`), `UTW_TERMCAP`,
-  `UTW_PDCURSES_DIR`, `UTW_PRELOAD_DIR`, `UTW_WEB_DIR`.
+  `UTW_MINIFY`, `UTW_LZ4`, `UTW_PDCURSES_DIR`, `UTW_PRELOAD_DIR`,
+  `UTW_WEB_DIR`.
 - Hooks: `UTW_PAGE` (page template), `UTW_WEB_FILES` (extra bundle files),
   `UTW_PTY_JS` (terminal glue), `UTW_PRE_JS_EXTRA` (extra pre-js).
 - `build-wasm.sh` builds and stages the bundle:
@@ -23,7 +24,10 @@ A checklist of everything in the template, grouped by where it lives. See
     the tree has git metadata;
   - downloads xterm.js, xterm.css and xterm-pty, verified by SHA-256, so
     the finished page works offline;
-  - configurable with `ROOT`, `WEB_DIR` and `OBJ_DIR`.
+  - builds with `MinSizeRel` and minified JS by default (`BUILD_TYPE` and
+    `UTW_MINIFY` change that), and can LZ4-compress the preloaded data
+    (`UTW_LZ4`);
+  - configurable with `ROOT`, `WEB_DIR`, `OBJ_DIR` and `BUILD_TYPE`.
 - Pinned versions: Emscripten 7.0.0, `@xterm/xterm` 5.5.0, `xterm-pty` 0.12.0,
   and the PDCursesMod commit recorded by the `wasm/PDCursesMod` submodule.
 - `wasm/patch-pty.py`: an idempotent patch applied to the checksum-verified

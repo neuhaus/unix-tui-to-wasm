@@ -14,6 +14,7 @@ ROOT="${ROOT:-$(cd "$(dirname "$0")/.." && pwd)}"
 RUNTIME_DIR="$(cd "$(dirname "$0")" && pwd)"
 WEB_DIR="${WEB_DIR:-$ROOT/build/web}"        # the servable bundle
 OBJ_DIR="${OBJ_DIR:-$ROOT/build/emscripten}" # CMake working dir
+BUILD_TYPE="${BUILD_TYPE:-MinSizeRel}"       # Release for speed, Debug to debug
 EMSDK_VERSION="$(cat "$RUNTIME_DIR/emsdk-version")"
 
 # PDCursesMod, the curses backend for UTW_CURSES=pdcurses, is a submodule.
@@ -77,7 +78,7 @@ python3 "$RUNTIME_DIR/patch-pty.py" \
 
 # The default build includes the <target>_web CMake target, which stages
 # the runtime files into WEB_DIR; the fetched assets are already there.
-emcmake cmake -S "$ROOT" -B "$OBJ_DIR" -DCMAKE_BUILD_TYPE=Release \
+emcmake cmake -S "$ROOT" -B "$OBJ_DIR" -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
   -DUTW_WEB_DIR="$WEB_DIR"
 cmake --build "$OBJ_DIR"
 
