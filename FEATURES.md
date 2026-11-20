@@ -20,7 +20,10 @@ A checklist of everything in the template, grouped by where it lives. See
   - downloads xterm.js, xterm.css and xterm-pty, verified by SHA-256, so
     the finished page works offline;
   - configurable with `ROOT`, `WEB_DIR` and `OBJ_DIR`.
-- Pinned versions: Emscripten 6.0.13, `@xterm/xterm` 5.5.0, `xterm-pty` 0.12.0.
+- Pinned versions: Emscripten 7.0.0, `@xterm/xterm` 5.5.0, `xterm-pty` 0.12.0.
+- `wasm/patch-pty.py`: an idempotent patch applied to the checksum-verified
+  xterm-pty glue so version 0.12.0 keeps working on Emscripten 7, which no
+  longer defines the `$TTY__deps` metadata the glue edits.
 
 ## C shims (`wasm/tui.c`, `wasm/tui.h`, `wasm/stub-include/`)
 

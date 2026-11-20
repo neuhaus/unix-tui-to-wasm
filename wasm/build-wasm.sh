@@ -61,7 +61,11 @@ fetch "$XTERM/lib/xterm.js"    "$WEB_DIR/xterm.js"       1f991ac3b4b283ebf96e60a
 fetch "$XTERM/css/xterm.css"   "$WEB_DIR/xterm.css"      ba8e6985669488981ccf40c0cefe3aba80722cb6c92de7ad628b0bd717faf2b6
 fetch "$PTY/index.mjs"         "$WEB_DIR/xterm-pty.js"   9d1ab8c5f3af23ddc835f9cf61f3db7097ad338e4655ae20a7dc263adee552e2
 # The link step references the glue at this gitignored source-tree path.
-fetch "$PTY/emscripten-pty.js" "$ROOT/wasm/emscripten-pty.js" 93d474cb4141461145c6a01aa76bbe6f75313b562051519c8bcd21d367125315
+# xterm-pty 0.12.0 still edits the $TTY__deps metadata that Emscripten 7
+# removed, so patch the checksum-verified download for the current SDK.
+fetch "$PTY/emscripten-pty.js" "$ROOT/wasm/emscripten-pty.js.orig" 93d474cb4141461145c6a01aa76bbe6f75313b562051519c8bcd21d367125315
+python3 "$(dirname "$0")/patch-pty.py" \
+  "$ROOT/wasm/emscripten-pty.js.orig" "$ROOT/wasm/emscripten-pty.js"
 
 # The default build includes the <target>_web CMake target, which stages
 # the runtime files into WEB_DIR; the fetched assets are already there.

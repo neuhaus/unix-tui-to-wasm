@@ -12,7 +12,7 @@ See [FEATURES.md](FEATURES.md) for a list of everything it provides.
 ```sh
 # Install Emscripten once (pinned version: wasm/emsdk-version)
 git clone https://github.com/emscripten-core/emsdk.git
-cd emsdk && ./emsdk install 6.0.13 && ./emsdk activate 6.0.13
+cd emsdk && ./emsdk install 7.0.0 && ./emsdk activate 7.0.0
 source ./emsdk_env.sh
 
 ./wasm/build-wasm.sh        # fetches xterm.js/xterm-pty (checksum-verified)
@@ -78,7 +78,7 @@ callback to `createStorageManager()` to map stored file names for display.
   to recognize a file across page reloads. Validate saved files by content or a
   format-specific token instead.
 - `-fstack-protector` was unavailable with Emscripten 3.1.47. The pinned
-  6.0.13 SDK is used without that flag.
+  7.0.0 SDK is used without that flag.
 
 The infrastructure was extracted from the wasm port of restoHack.
 
