@@ -8,6 +8,8 @@
 #   UTW_COLS, UTW_ROWS   terminal geometry (default 80x24)
 #   UTW_PERSIST          persist the virtual FS in the browser (default ON)
 #   UTW_PERSIST_DIR      IDBFS mount point (default /data)
+#   UTW_CURSES           build the curses shim and put its <curses.h> on the
+#                        include path (default OFF; for curses programs)
 #   UTW_TITLE            browser page title
 #   UTW_PRELOAD_DIR      directory preloaded read-only at the FS root
 #   UTW_WEB_DIR          servable bundle directory (default <build>/web)
@@ -34,6 +36,9 @@ if(NOT DEFINED UTW_PERSIST)
 endif()
 if(NOT DEFINED UTW_PERSIST_DIR)
   set(UTW_PERSIST_DIR "/data")
+endif()
+if(NOT DEFINED UTW_CURSES)
+  set(UTW_CURSES OFF)
 endif()
 if(NOT DEFINED UTW_TITLE)
   set(UTW_TITLE "unix-tui-to-wasm")
@@ -65,6 +70,11 @@ function(utw_enable target)
 
   # Only the Emscripten build gets the <curses.h>/<termcap.h> stubs; a
   # native build must keep finding the real system headers.
+  if(UTW_CURSES)
+    # curses/curses.h must be found before the empty stub in stub-include.
+    target_sources(${target} PRIVATE "${UTW_ROOT}/curses/curses.c")
+    target_include_directories(${target} BEFORE PRIVATE "${UTW_ROOT}/curses")
+  endif()
   target_include_directories(${target} PRIVATE "${UTW_ROOT}/stub-include")
 
   if(NOT EXISTS "${UTW_PTY_JS}")

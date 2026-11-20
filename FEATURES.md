@@ -11,7 +11,7 @@ A checklist of everything in the template, grouped by where it lives. See
 - Link options set for you: Asyncify, ES6 module output, growable memory,
   exit-runtime, the `FS` runtime export and IDBFS.
 - Options: `UTW_TITLE`, `UTW_COLS`, `UTW_ROWS`, `UTW_PERSIST`,
-  `UTW_PERSIST_DIR`, `UTW_PRELOAD_DIR`, `UTW_WEB_DIR`.
+  `UTW_PERSIST_DIR`, `UTW_CURSES`, `UTW_PRELOAD_DIR`, `UTW_WEB_DIR`.
 - Hooks: `UTW_PAGE` (page template), `UTW_WEB_FILES` (extra bundle files),
   `UTW_PTY_JS` (terminal glue), `UTW_PRE_JS_EXTRA` (extra pre-js).
 - `build-wasm.sh` builds and stages the bundle:
@@ -31,12 +31,35 @@ A checklist of everything in the template, grouped by where it lives. See
   - Numbers and flags: `co` and `li` from `UTW_COLS`/`UTW_ROWS`, and `bs`.
 - `delay_output(ms)`: a pause that yields to the browser, so pending output
   reaches the screen.
-- `getpwuid()`: a single-user answer built from `$USER` and `$HOME`
-  (Emscripten's libc returns `NULL`). Emscripten build only.
+- `getpwuid()` and `getpwnam()`: a single-user answer built from `$USER`
+  and `$HOME` (Emscripten's libc returns `NULL`). Emscripten build only.
 - `setuid()`: always succeeds (Emscripten's libc always fails). Emscripten
   build only.
 - Empty `curses.h` and `termcap.h` stubs, on the include path for the
   Emscripten build, so unchanged `#include`s still resolve.
+
+## Curses shim (`wasm/curses/`, enabled with `UTW_CURSES`)
+
+A minimal curses implementation rendered with the same ANSI escapes and
+xterm-pty input as the termcap shim. It covers what Angband's GCU front end
+needs and nothing more:
+
+- Windows (`newwin`, `delwin`, `wresize`, `wmove`, `wclear`, `werase`,
+  `wbkgd`, `whline`, `wclrtoeol`, `wattrset`), with wide character output
+  (`mvwaddnwstr`).
+- Colors: `start_color`, `init_pair`, `init_color`, `use_default_colors`,
+  256 colors and color pairs, plus `A_BOLD`, `A_REVERSE`, `A_BLINK`, `A_DIM`
+  and `A_UNDERLINE`.
+- Input: `getch`, `ungetch`, `nodelay`, `halfdelay`, `keypad` (arrow and
+  navigation key escape sequences) and the usual `cbreak`/`raw`/`echo`
+  terminal modes, driven through xterm-pty's termios emulation.
+- Only changed cells are redrawn (the screen is diffed against a shadow
+  buffer), so refreshing is cheap.
+- `usleep()` is routed to `delay_output()` so animations yield to the
+  browser.
+
+Not implemented: pads, menus, forms, mouse, ACS line drawing, terminfo and
+`resizeterm` (the terminal geometry is fixed).
 
 ## Browser page (`wasm/index.html.in`, `wasm/pre.js`, `wasm/storage.js`)
 

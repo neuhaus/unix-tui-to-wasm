@@ -1,9 +1,10 @@
 # unix-tui-to-wasm
 
-A small template for running historical Unix text programs (termcap) in the
-browser via Emscripten and xterm-pty: Emscripten build setup, a termcap shim,
-the xterm-pty bridge and an optional persistent filesystem (IDBFS), ready to
-copy into another project. A mini demo (`src/demo.c`) serves as a smoke test.
+A small template for running historical Unix text programs (termcap or
+curses) in the browser via Emscripten and xterm-pty: Emscripten build setup, a
+termcap shim, an optional minimal curses layer, the xterm-pty bridge and an
+optional persistent filesystem (IDBFS), ready to copy into another project. A
+mini demo (`src/demo.c`) serves as a smoke test.
 See [FEATURES.md](FEATURES.md) for a list of everything it provides.
 
 ## Run the demo
@@ -31,6 +32,7 @@ then `./build/demo`.
    set(UTW_TITLE "my program")
    set(UTW_COLS 80)              # optional, default 80x24
    set(UTW_PERSIST ON)           # optional: IDBFS mounted at /data
+   set(UTW_CURSES ON)            # optional: build the curses shim
    set(UTW_PRELOAD_DIR "${CMAKE_SOURCE_DIR}/static") # optional data files
    include(${CMAKE_SOURCE_DIR}/wasm/utw.cmake)
    utw_enable(myprogram)
@@ -49,9 +51,14 @@ then `./build/demo`.
    to the browser event loop); ports with their own fallback should treat
    it as already provided in the Emscripten build.
    Emscripten's libc has no passwd database and refuses `setuid()`, so
-   `tui.c` also replaces `getpwuid()` (name from `$USER`, home from `$HOME`)
-   and `setuid()` (always succeeds) with single-user versions. Programs that
-   look themselves up or drop privileges need no `#ifdef`.
+   `tui.c` also replaces `getpwuid()`/`getpwnam()` (name from `$USER`, home
+   from `$HOME`) and `setuid()` (always succeeds) with single-user versions.
+   Programs that look themselves up or drop privileges need no `#ifdef`.
+   Programs already written against curses can set `UTW_CURSES ON` instead of
+   using termcap directly. The `wasm/curses/` layer then provides the subset
+   of curses used by Angband's GCU front end (windows, color pairs, wide
+   character output, timed input) on top of the same ANSI terminal. See its
+   header for the implemented calls and the README's "Limits" section.
 4. Run `./wasm/build-wasm.sh` (it uses your `CMakeLists.txt`); the bundle
    ends up in `build/web`.
 
@@ -62,7 +69,9 @@ callback to `createStorageManager()` to map stored file names for display.
 
 ## Limits
 
-- Only the termcap subset implemented in `wasm/tui.c` (no curses, no terminfo).
+- Only the termcap subset implemented in `wasm/tui.c` (no terminfo), plus the
+  optional curses subset in `wasm/curses/`. The curses layer has no pads,
+  menus, forms or mouse support, and no line-drawing (ACS) characters.
 - Fixed terminal; the geometry comes from `UTW_COLS`/`UTW_ROWS`.
 - No `fork`/`exec`: external pagers or editors need a replacement.
 - IDBFS restores files with new inode numbers, so `stat().st_ino` cannot be used

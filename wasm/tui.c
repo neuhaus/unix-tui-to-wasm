@@ -137,12 +137,16 @@ int delay_output(int ms) {
 #include <stdlib.h>
 #include <unistd.h>
 
-struct passwd *getpwuid(uid_t uid) {
+static struct passwd *wasm_passwd(uid_t uid, const char *name)
+{
   static struct passwd pw;
-  const char *name = getenv("USER");
+  const char *user = getenv("USER");
   const char *home = getenv("HOME");
 
-  pw.pw_name = (char *)(name && *name ? name : "player");
+  if (!user || !*user) user = "player";
+  if (name && strcmp(name, user) != 0) return NULL;
+
+  pw.pw_name = (char *)user;
   pw.pw_passwd = (char *)"*";
   pw.pw_uid = uid;
   pw.pw_gid = (gid_t)uid;
@@ -152,7 +156,18 @@ struct passwd *getpwuid(uid_t uid) {
   return &pw;
 }
 
-int setuid(uid_t uid) {
+struct passwd *getpwuid(uid_t uid)
+{
+  return wasm_passwd(uid, NULL);
+}
+
+struct passwd *getpwnam(const char *name)
+{
+  return wasm_passwd(getuid(), name);
+}
+
+int setuid(uid_t uid)
+{
   (void)uid;
   return 0;
 }
