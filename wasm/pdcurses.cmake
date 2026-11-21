@@ -13,8 +13,9 @@
 #
 # The sources are the pinned wasm/PDCursesMod submodule; UTW_PDCURSES_DIR
 # overrides its location. Compile-time adjustments for the browser:
-#   PDC_WIDE, CHTYPE_32   wide-char API and 32-bit chtype, as Angband's
-#                         attribute tables store colors in an int
+#   PDC_FORCE_UTF8, CHTYPE_32  wide-char API with forced UTF-8 output
+#                         (PDC_FORCE_UTF8 implies PDC_WIDE) and 32-bit chtype,
+#                         as Angband's attribute tables store colors in an int
 #   usleep=...            PDC_napms() waits with usleep(); in the browser the
 #                         wait must yield to the event loop instead of
 #                         blocking it (see pdcurses-emscripten.c)
@@ -95,7 +96,7 @@ function(utw_pdcurses target)
     # PUBLIC: consumers include <curses.h> and must see the same chtype and
     # wide-character API the library was built with.
     target_compile_definitions(utw_pdcurses PUBLIC
-      PDC_WIDE
+      PDC_FORCE_UTF8
       CHTYPE_32)
     target_compile_definitions(utw_pdcurses PRIVATE
       _GNU_SOURCE

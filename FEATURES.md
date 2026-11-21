@@ -89,8 +89,11 @@ the pinned `wasm/PDCursesMod` submodule (`UTW_PDCURSES_DIR` overrides its
 location):
 
 - VT port: plain ANSI escape output for xterm.js, plus xterm-pty input.
-- Wide characters (`PDC_WIDE`) and 32-bit `chtype` (`CHTYPE_32`) so color
-  pairs fit in an `int`, as Angband's attribute tables expect.
+- Wide characters with forced UTF-8 output (`PDC_FORCE_UTF8`, which implies
+  `PDC_WIDE`) and 32-bit `chtype` (`CHTYPE_32`) so color pairs fit in an
+  `int`, as Angband's attribute tables expect.  Both definitions are
+  `PUBLIC`: consumers include the header with the same ABI, which PDCurses
+  encodes in its symbol names.
 - 256 colors, pads, panels, menus, mouse and the usual curses surface.
 - `initscr` takes the geometry from the PTY (`TIOCGWINSZ`), so the
   `#cols=N&rows=M` fragment works without rebuilding.
