@@ -28,11 +28,11 @@ A checklist of everything in the template, grouped by where it lives. See
     `UTW_MINIFY` change that), and can LZ4-compress the preloaded data
     (`UTW_LZ4`);
   - configurable with `ROOT`, `WEB_DIR`, `OBJ_DIR` and `BUILD_TYPE`.
-- Pinned versions: Emscripten 7.0.0, `@xterm/xterm` 5.5.0, `xterm-pty` 0.12.0,
+- Pinned versions: Emscripten 7.0.0, `@xterm/xterm` 5.5.0, `xterm-pty` 0.13.0,
   and the PDCursesMod commit recorded by the `wasm/PDCursesMod` submodule.
-- `wasm/patch-pty.py`: an idempotent patch applied to the checksum-verified
-  xterm-pty glue so version 0.12.0 keeps working on Emscripten 7, which no
-  longer defines the `$TTY__deps` metadata the glue edits.
+- xterm-pty 0.13.0 supports Emscripten 7 and newer, so its glue is used
+  unmodified; earlier template revisions patched 0.12.0 for the removed
+  `$TTY__deps` metadata.
 
 ## C shims (`wasm/tui.c`, `wasm/compat.c`, `wasm/tui.h`, `wasm/stub-include/`)
 

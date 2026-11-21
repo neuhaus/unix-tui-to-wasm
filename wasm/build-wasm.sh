@@ -65,16 +65,13 @@ fetch() { # URL DEST SHA256
 
 mkdir -p "$WEB_DIR" "$OBJ_DIR"
 XTERM=https://unpkg.com/@xterm/xterm@5.5.0
-PTY=https://unpkg.com/xterm-pty@0.12.0
+PTY=https://unpkg.com/xterm-pty@0.13.0
 fetch "$XTERM/lib/xterm.js"    "$WEB_DIR/xterm.js"       1f991ac3b4b283ebf96e60ae23a00a52765dd3a2e46fa6fdda9f1aab032f7495
 fetch "$XTERM/css/xterm.css"   "$WEB_DIR/xterm.css"      ba8e6985669488981ccf40c0cefe3aba80722cb6c92de7ad628b0bd717faf2b6
-fetch "$PTY/index.mjs"         "$WEB_DIR/xterm-pty.js"   9d1ab8c5f3af23ddc835f9cf61f3db7097ad338e4655ae20a7dc263adee552e2
+fetch "$PTY/index.mjs"         "$WEB_DIR/xterm-pty.js"   bd14103f2cbd33cc3d143fedc014de5bcdb42efc25bd7731724af04de56f42fe
 # The link step references the glue at this gitignored source-tree path.
-# xterm-pty 0.12.0 still edits the $TTY__deps metadata that Emscripten 7
-# removed, so patch the checksum-verified download for the current SDK.
-fetch "$PTY/emscripten-pty.js" "$RUNTIME_DIR/emscripten-pty.js.orig" 93d474cb4141461145c6a01aa76bbe6f75313b562051519c8bcd21d367125315
-python3 "$RUNTIME_DIR/patch-pty.py" \
-  "$RUNTIME_DIR/emscripten-pty.js.orig" "$RUNTIME_DIR/emscripten-pty.js"
+# xterm-pty 0.13.0 supports Emscripten 7 and newer, so it is copied as is.
+fetch "$PTY/emscripten-pty.js" "$RUNTIME_DIR/emscripten-pty.js" 0a6a29c696cb718efce542e13c0b86b99deec4a5d5455948351a31e79380060f
 
 # The default build includes the <target>_web CMake target, which stages
 # the runtime files into WEB_DIR; the fetched assets are already there.
