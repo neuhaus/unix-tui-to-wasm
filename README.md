@@ -117,8 +117,6 @@ callback to `createStorageManager()` to map stored file names for display.
 - IDBFS restores files with new inode numbers, so `stat().st_ino` cannot be used
   to recognize a file across page reloads. Validate saved files by content or a
   format-specific token instead.
-- `-fstack-protector` was unavailable with Emscripten 3.1.47. The pinned
-  7.0.0 SDK is used without that flag.
 
 The infrastructure was extracted from the wasm port of restoHack.
 

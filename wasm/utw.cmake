@@ -57,7 +57,7 @@ string(TOLOWER "${UTW_CURSES}" _utw_curses_mode)
 if(_utw_curses_mode STREQUAL "on"
     OR _utw_curses_mode STREQUAL "true"
     OR _utw_curses_mode STREQUAL "1")
-  # Historic boolean spelling: select the bundled minimal shim.
+  # ON is accepted as an alias for the bundled shim.
   set(_utw_curses_mode "shim")
 endif()
 if(NOT _utw_curses_mode STREQUAL "off"

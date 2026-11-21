@@ -70,7 +70,6 @@ fetch "$XTERM/lib/xterm.js"    "$WEB_DIR/xterm.js"       1f991ac3b4b283ebf96e60a
 fetch "$XTERM/css/xterm.css"   "$WEB_DIR/xterm.css"      ba8e6985669488981ccf40c0cefe3aba80722cb6c92de7ad628b0bd717faf2b6
 fetch "$PTY/index.mjs"         "$WEB_DIR/xterm-pty.js"   bd14103f2cbd33cc3d143fedc014de5bcdb42efc25bd7731724af04de56f42fe
 # The link step references the glue at this gitignored source-tree path.
-# xterm-pty 0.13.0 supports Emscripten 7 and newer, so it is copied as is.
 fetch "$PTY/emscripten-pty.js" "$RUNTIME_DIR/emscripten-pty.js" 0a6a29c696cb718efce542e13c0b86b99deec4a5d5455948351a31e79380060f
 
 # The default build includes the <target>_web CMake target, which stages

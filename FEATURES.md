@@ -30,9 +30,6 @@ A checklist of everything in the template, grouped by where it lives. See
   - configurable with `ROOT`, `WEB_DIR`, `OBJ_DIR` and `BUILD_TYPE`.
 - Pinned versions: Emscripten 7.0.0, `@xterm/xterm` 5.5.0, `xterm-pty` 0.13.0,
   and the PDCursesMod commit recorded by the `wasm/PDCursesMod` submodule.
-- xterm-pty 0.13.0 supports Emscripten 7 and newer, so its glue is used
-  unmodified; earlier template revisions patched 0.12.0 for the removed
-  `$TTY__deps` metadata.
 
 ## C shims (`wasm/tui.c`, `wasm/compat.c`, `wasm/tui.h`, `wasm/stub-include/`)
 
@@ -99,8 +96,7 @@ location):
   `#cols=N&rows=M` fragment works without rebuilding.
 - `PDC_napms()` is compiled with `usleep=utw_emscripten_usleep`
   (`wasm/pdcurses-emscripten.c`), so timed input yields to the browser event
-  loop instead of freezing it. This workaround can go away once the
-  corresponding Emscripten fixes are merged upstream.
+  loop instead of freezing it.
 - `delay_output()` comes from PDCurses; `tui.c` leaves its own copy out.
 - PDCurses' terminfo/termcap entry points are stubs, so `tui.c` stays the
   termcap implementation even with this backend.
