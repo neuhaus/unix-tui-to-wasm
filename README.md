@@ -1,12 +1,12 @@
 # unix-tui-to-wasm
 
 A small template for running historical Unix text programs (termcap or
-curses) in the browser via Emscripten and xterm-pty: Emscripten build setup, a
+curses) in the browser via [Emscripten](https://emscripten.org/) and [xterm-pty](https://github.com/mame/xterm-pty): Emscripten build setup, a
 termcap shim, two optional curses backends (a minimal built-in one or
-PDCursesMod's VT port), the xterm-pty bridge and an optional persistent
+[PDCursesMod](https://github.com/Bill-Gray/PDCursesMod)'s VT port), the xterm-pty bridge and an optional persistent
 filesystem (IDBFS), ready to copy into another project or to use as a git
 submodule. A mini demo (`src/demo.c`) serves as a smoke test.
-See [FEATURES.md](FEATURES.md) for a list of everything it provides.
+Check out [FEATURES](FEATURES.md) and be dazzled ;-)
 
 ## Run the demo
 
@@ -24,7 +24,10 @@ Serve over HTTP (ES modules + IndexedDB), not via `file://`.
 Native sanity check without Emscripten: `cmake -B build && cmake --build build`,
 then `./build/demo`.
 
-## Porting your own program
+## Porting your own programs
+
+> [!TIP]
+> I've done ports of [hack 1.0.3](https://github.com/neuhaus/restoHack), [protoHack](https://github.com/neuhaus/protoHack/), [rogue](https://github.com/neuhaus/rogue-wasm/) and [Angband](https://github.com/neuhaus/angband/) that you can look at.
 
 1. Copy `wasm/` next to your sources, or add it as a git submodule (see
    below). A checkout includes the `wasm/PDCursesMod` submodule; after
